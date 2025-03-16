@@ -1,0 +1,17 @@
+{
+  "name": "threejs",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2",
+    "three": "^0.174.0"
+  },
+  "devDependencies": {
+    "vite": "^6.2.2"
+  },
+  "scripts": {
+    "start:01": "cd 01.conceitos && vite",
+    "build:01": "cd 01.conceitos && vite build"
+  }
+}
