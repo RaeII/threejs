@@ -1,105 +1,60 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
 
-body {
-    font-family: 'Poppins', sans-serif;
-    background-color: #000;
-    color: #1a3cd4;
-    overflow: hidden;
+body { 
+    margin: 0; 
+    overflow: hidden; 
+    font-family: 'Arial', sans-serif;
 }
-
-#scene-container {
-    position: fixed;
+canvas { 
+    display: block; 
+    position: absolute;
     top: 0;
     left: 0;
+    z-index: 1;
     width: 100%;
     height: 100%;
-    z-index: 1;
 }
-
-.input-overlay {
-    position: fixed;
-    bottom: 30px;
-    left: 0;
-    width: 100%;
-    display: flex;
-    justify-content: center;
+.select-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
     z-index: 10;
-    pointer-events: none;
-}
-
-.input-container {
     display: flex;
-    gap: 10px;
-    background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(10px);
-    padding: 15px 20px;
-    border-radius: 50px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    pointer-events: auto;
-    transition: transform 0.3s, box-shadow 0.3s;
+    flex-direction: column;
+    align-items: flex-end;
 }
 
-.input-container:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-}
-
-input {
-    background-color: rgba(255, 255, 255, 0.1);
-    border: none;
-    color: #fff;
-    padding: 12px 20px;
-    border-radius: 25px;
-    font-size: 16px;
-    width: 220px;
-    outline: none;
-    transition: background-color 0.3s;
-}
-
-input::placeholder {
-    color: rgba(255, 255, 255, 0.6);
-}
-
-input:focus {
-    background-color: rgba(255, 255, 255, 0.2);
-}
-
-button {
-    background: linear-gradient(135deg, #3498db, #2980b9);
+#elementSize {
+    background-color: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    padding: 10px 15px;
+    font-size: 14px;
     color: white;
-    border: none;
-    border-radius: 25px;
-    padding: 12px 25px;
+    outline: none;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
     cursor: pointer;
-    font-size: 16px;
-    font-weight: 500;
-    transition: all 0.3s;
-    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    min-width: 140px;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 20px;
+    padding-right: 35px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
-
-button:hover {
-    background: linear-gradient(135deg, #2980b9, #3498db);
+#elementSize:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
 }
-
-button:active {
-    transform: translateY(1px);
-    box-shadow: 0 2px 10px rgba(52, 152, 219, 0.3);
+#elementSize:focus {
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
 }
-
-/* Estilo para o input number - remove as setas */
-input[type=number]::-webkit-inner-spin-button, 
-input[type=number]::-webkit-outer-spin-button { 
-    -webkit-appearance: none; 
-    margin: 0; 
+#elementSize option {
+    background-color: #2c3e50;
+    color: white;
 }
-
-input[type=number] {
-    -moz-appearance: textfield;
-} 

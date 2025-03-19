@@ -3,13 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Three.js - Conceitos</title>
-    <style>
-        body { margin: 0; overflow: hidden; }
-        canvas { display: block; }
-    </style>
+    <link rel="stylesheet" href="./css/style.css">
+    <title>Three.js</title>
+   
 </head>
 <body>
+    <div class="select-container">
+        <select id="elementSize">
+            <option value="basics">Básico</option>
+            <option value="cube">Cubo</option>
+            <option value="sphere">Esfera</option>
+        </select>
+    </div>
+
     <canvas id="webgl"></canvas>
     <script type="module" src="./js/main.js"></script>
 </body>
