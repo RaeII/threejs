@@ -1,7 +1,42 @@
-import * as THREE from './three';
+import * as THREE from 'three';
+
+const texture = () => {
+    // Carregar Texturas
+    const textureLoader = new THREE.TextureLoader();
+
+    const colorMap = textureLoader.load('../textures/Fabric077_2K-PNG/Fabric077_2K-PNG_Color.png');
+    const roughnessMap = textureLoader.load('../textures/Fabric077_2K-PNG/Fabric077_2K-PNG_Roughness.png');
+    const normalMap = textureLoader.load('../textures/Fabric077_2K-PNG/Fabric077_2K-PNG_NormalGL.png');
+    const displacementMap = textureLoader.load('../textures/Fabric077_2K-PNG/Fabric077_2K-PNG_Displacement.png');
+
+    colorMap.colorSpace = THREE.SRGBColorSpace;
+
+    // Criar materiais com textura para o cubo
+    const materialOptions = {
+        map: colorMap,
+        normalMap: normalMap,
+        roughnessMap: roughnessMap,
+        displacementMap: displacementMap,
+        displacementScale: 0.05,
+        roughness: 1,
+        metalness: 0,
+        clearcoat: 1.0,
+        clearcoatRoughness: 1.0,
+    };
+
+    const materials = Array(6).fill(new THREE.MeshPhysicalMaterial(materialOptions));
+
+    return materials;
+};
+
+const light = (callback) => {
+    const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+
+    callback(hemisphereLight, ambientLight);
+};
 
 const basics = () => {
-    
     const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('webgl') });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
@@ -9,46 +44,32 @@ const basics = () => {
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const scene = new THREE.Scene();
 
-    //eixos de coordenadas de ajuda para visualizar o espaço
-    const axesHelper = new THREE.AxesHelper(5)
-    scene.add(axesHelper)
+    const axesHelper = new THREE.AxesHelper(5);
+    scene.add(axesHelper);
 
-    //posição da camera
-    //x,y,z
-    camera.position.set(0,0.1,5)
+    camera.position.set(0, 0.1, 4);
 
-    const BoxGeometry = new THREE.BoxGeometry();
-    const boxMaterial = new THREE.MeshBasicMaterial({color:"rgb(18, 128, 201)"})
-    const box = new THREE.Mesh(BoxGeometry, boxMaterial)
-    scene.add(box)
+    const materials = texture();
 
-   //animação
+    const boxGeometry = new THREE.BoxGeometry(2, 2, 2, 128, 128, 128);
+    const box = new THREE.Mesh(boxGeometry, materials);
+    scene.add(box);
+
+    light((light1, light2) => {
+        scene.add(light1);
+        scene.add(light2);
+    });
+
     const animate = (time) => {
-        renderer.render(scene,camera)
-        box.rotation.x = time / 2000
-        box.rotation.y = time / 1000
-    }
+        box.rotation.x = time / 2000;
+        box.rotation.y = time / 1000;
 
-    //executa a função animate a cada frame
-    renderer.setAnimationLoop(animate)
-    
-    // Adicionar função para parar a animação
-    const stopAnimation = () => {
-        renderer.setAnimationLoop(null);
-        renderer.dispose();
+        renderer.render(scene, camera);
     };
-    
-    // Adicionar evento para redimensionar a janela
-    const handleResize = () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    };
-    
-    window.addEventListener('resize', handleResize);
-    
-    // Retornar o renderer para que possa ser gerenciado externamente
+
+    renderer.setAnimationLoop(animate);
+
     return renderer;
-}
+};
 
-export {basics}
+export { basics };
