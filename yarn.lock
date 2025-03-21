@@ -784,6 +784,11 @@ statuses@2.0.1:
   resolved "https://registry.yarnpkg.com/statuses/-/statuses-2.0.1.tgz#55cb000ccf1d48728bd23c685a063998cf1a1b63"
   integrity sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==
 
+three-rounded-box@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/three-rounded-box/-/three-rounded-box-0.1.1.tgz#9db98145032b188e7b6b7e497ffefb580ecd639d"
+  integrity sha512-pOl0ZmZZtbs4TZsST7UViFkxA0LAfLepJKAU5fOJuvk0IsvVUTjufn3et2ZmJNpjVn8K61MTbFagIyoA61yTXg==
+
 three@^0.174.0:
   version "0.174.0"
   resolved "https://registry.yarnpkg.com/three/-/three-0.174.0.tgz#53f46d6fd27515231b2af321f798f1e0ecf3f905"

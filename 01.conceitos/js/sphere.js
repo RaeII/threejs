@@ -1,4 +1,5 @@
-import * as THREE from './three';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 const sphereRender = () => {
     // Configuração básica da cena
@@ -6,9 +7,10 @@ const sphereRender = () => {
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('webgl') });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-
-
+    // Não adicionar ao DOM, pois o main.js já faz isso
+    
+    // Adicionar OrbitControls
+    const orbitControls = new OrbitControls(camera, renderer.domElement);
 
     // Criar geometria cubo
     //const geometry = new THREE.BoxGeometry();
@@ -39,14 +41,24 @@ const sphereRender = () => {
     //const cube = new THREE.Mesh(geometry, material);
     //scene.add(cube);
 
-    // Carregar Texturas
-    //Leather034A_4K-PNG
+    // Carregar Texturas - modificado para evitar erros de FLIP_Y
     const textureLoader = new THREE.TextureLoader();
+    
+    // Desativar FLIP_Y para compatibilidade
+    textureLoader.flipY = false;
+    
+    //Leather034A_4K-PNG
     const colorMap = textureLoader.load('../textures/Leather034C_1K-JPG/Leather034C_1K-JPG_Color.jpg'); 
     const aoMap = textureLoader.load('../textures/Leather034C_1K-JPG/Leather034C_1K-JPG_AmbientOcclusion.jpg');
     const roughnessMap = textureLoader.load('../textures/Leather034C_1K-JPG/Leather034C_1K-JPG_Roughness.jpg');
     const normalMap = textureLoader.load('../textures/Leather034C_1K-JPG/Leather034C_1K-JPG_NormalGL.jpg');
     const displacementMap = textureLoader.load('../textures/Leather034C_1K-JPG/Leather034C_1K-JPG_Displacement.jpg');
+
+    // Configurar texturas para evitar problemas
+    [colorMap, aoMap, roughnessMap, normalMap, displacementMap].forEach(texture => {
+        texture.flipY = false;
+        texture.needsUpdate = true;
+    });
 
     // Configurar repetição das texturas para criar mais gomos
     colorMap.wrapS = THREE.RepeatWrapping;
@@ -106,6 +118,7 @@ const sphereRender = () => {
 
     // Posicionar câmera
     camera.position.z = 3;
+    orbitControls.update();
 
     // Função para alterar a cor do objeto
     function alterarCor(cor) {
@@ -120,17 +133,58 @@ const sphereRender = () => {
     // Você pode chamar a função alterarCor() no console do navegador
     // para mudar a cor dinamicamente durante a execução
 
-    // Função de animação
+    // Variável para controlar se a animação deve continuar
+    let isAnimating = true;
+
+    // Função de animação modificada para verificar se deve continuar
     function animate() {
-        requestAnimationFrame(animate);
+        if (!isAnimating) return;
+        
+        // Armazenar o ID para que possa ser cancelado posteriormente
+        window.activeAnimationId = requestAnimationFrame(animate);
+        
         sphere.rotation.y += 0.01;
         renderer.render(scene, camera);
     }
 
+    // Iniciar a animação
     animate();
+    
+    // Adicionar evento para redimensionar a janela
+    const handleResize = () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    window.lastResizeHandler = handleResize;
         
-    // Retornar o renderer para que possa ser gerenciado externamente
-    return renderer;
+    // Função para limpar recursos adequadamente
+    const dispose = () => {
+        // Limpar texturas para evitar vazamentos de memória e conflitos
+        [colorMap, aoMap, roughnessMap, normalMap, displacementMap].forEach(texture => {
+            texture.dispose();
+        });
+
+        // Limpar geometrias e materiais
+        geometry.dispose();
+        material.dispose();
+    };
+
+    // Retornar o renderer, os controles e uma função para parar a animação
+    return {
+        renderer: renderer,
+        controls: orbitControls,
+        stopAnimation: () => {
+            isAnimating = false;
+            if (window.activeAnimationId) {
+                cancelAnimationFrame(window.activeAnimationId);
+                window.activeAnimationId = null;
+            }
+            dispose();
+        }
+    };
 };
 
 export { sphereRender }

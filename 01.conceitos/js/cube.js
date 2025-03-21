@@ -1,4 +1,5 @@
-import * as THREE from './three';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 const cube = () => {
   // Configuração básica da cena
@@ -6,16 +7,28 @@ const cube = () => {
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
   const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('webgl') });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
+  // Não adicionar ao DOM, pois o main.js já faz isso
+  
+  // Adicionar OrbitControls
+  const orbitControls = new OrbitControls(camera, renderer.domElement);
 
-  // Carregar Texturas
+  // Carregar Texturas - modificado para evitar erros de FLIP_Y
   const textureLoader = new THREE.TextureLoader();
+  
+  // Desativar FLIP_Y para compatibilidade
+  textureLoader.flipY = false;
 
   // Carregando todas as texturas disponíveis
   /* const colorMap = loadTexture('../textures/Fabric077_2K-PNG/Fabric077.png'); */
   const roughnessMap = textureLoader.load('../textures/Fabric077_2K-PNG/Fabric077_2K-PNG_Roughness.png');
   const normalMapGL = textureLoader.load('../textures/Fabric077_2K-PNG/Fabric077_2K-PNG_NormalGL.png');
   const displacementMap = textureLoader.load('../textures/Fabric077_2K-PNG/Fabric077_2K-PNG_Displacement.png');
+  
+  // Configurar texturas para evitar problemas
+  [roughnessMap, normalMapGL, displacementMap].forEach(texture => {
+    texture.flipY = false;
+    texture.needsUpdate = true;
+  });
 
   // Criar materiais para cada face do cubo
   const materialOptions = {
@@ -67,6 +80,7 @@ const cube = () => {
 
   // Posicionar câmera
   camera.position.z = 3;
+  orbitControls.update();
 
   // Função para alterar a cor do objeto
   function alterarCor(cor) {
@@ -101,9 +115,29 @@ const cube = () => {
   };
   
   window.addEventListener('resize', handleResize);
+  window.lastResizeHandler = handleResize;
   
-  // Retornar o renderer para poder gerenciá-lo externamente
-  return renderer;
+  // Função para limpar recursos adequadamente
+  const dispose = () => {
+    // Limpar texturas para evitar vazamentos de memória e conflitos
+    [roughnessMap, normalMapGL, displacementMap].forEach(texture => {
+      texture.dispose();
+    });
+
+    // Limpar geometrias e materiais
+    geometry.dispose();
+    materials.forEach(material => material.dispose());
+  };
+
+  // Retornar o renderer e os controles
+  return {
+    renderer: renderer,
+    controls: orbitControls,
+    stopAnimation: () => {
+      renderer.setAnimationLoop(null);
+      dispose();
+    }
+  };
 };
 
 export { cube };
