@@ -5,18 +5,20 @@ import sky from '../textures/NightSkyHDRI008_4K-TONEMAPPED.jpg';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 // Função para limpar recursos adequadamente
-const dispose = (textures, mergedGeometry, material) => {
+const dispose = (material=false,textures=false) => {
     // Remover manipulador de redimensionamento
     window.removeEventListener('resize', handleResize);
     
     // Limpar texturas para evitar vazamentos de memória e conflitos
-    textures.forEach(texture => {
-        texture.dispose();
-    });
+    if(textures){
+        textures.forEach(texture => {
+            texture.dispose();
+        });
+    }
 
-    // Limpar geometrias e materiais
-    mergedGeometry.dispose();
-    material.dispose();
+    if(material){
+        material.dispose();
+    }
 };
 
 // Função para redimensionar a cena
@@ -109,7 +111,7 @@ const light = (callback) => {
 
     const dLightHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
 
-    callback([directionalLight, directionalLightHelper,ambientLight, dLightHelper]);
+    callback([directionalLight, directionalLightHelper,ambientLight, /* dLightHelper */]);
 };
 
 const planeGeometry = (callback) => {
@@ -146,33 +148,15 @@ const planeGeometry = (callback) => {
     callback(plane);
 };
 
-const addSphere = (callback) => {
-    const sphere = new THREE.SphereGeometry(2, 32, 32);
-    const material = new THREE.MeshStandardMaterial({
-        color: 'rgb(107, 1, 194)',
-        roughness: 0.6,
-        metalness: 0.6,
-        wireframe: false
-    });
-
-    const sphereMesh = new THREE.Mesh(sphere, material);
-
-    // Lançar sombra
-    sphereMesh.castShadow = true;
-    sphereMesh.receiveShadow = true;
-   
-    callback(sphereMesh);
-};
-
 const loadGLTF = (callback) => {
 
-    const building = new URL("../assets/skyscraper.glb", import.meta.url).href;
+    const building = new URL("../assets/batatinha.glb", import.meta.url).href;
 
     const loader = new GLTFLoader();
     loader.load(building, (gltf) => {
         const model = gltf.scene;
         // Ajustar a escala do modelo (valores menores diminuem, maiores aumentam)
-        model.scale.set(0.05, 0.05, 0.05);
+        model.scale.set(50,50,50);
         
         // Aplicar propriedades de sombra a todos os objetos filhos do modelo
         model.traverse(function(node) {
@@ -197,7 +181,7 @@ const loadGLTF = (callback) => {
     });
 };
 
-const basics = async () => {
+const building = async () => {
 
     const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('webgl') });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -226,20 +210,6 @@ const basics = async () => {
     camera.position.set(0, 0.1, 4);
     orbitControls.update();
 
-    // Importante: Merge Vertices corretamente aplicado
-    const boxGeometry = new THREE.BoxGeometry(2, 2, 2, 128, 128, 128);
-    const mergedGeometry = mergeVertices(boxGeometry, 0.0002);
-
-    // Aguardar carregamento das texturas
-    const { material, textures } = await texture();
-
-    const box = new THREE.Mesh(mergedGeometry, material);
-
-    // Lançar sombra
-    box.castShadow = true;
-    box.receiveShadow = true;
-
-    scene.add(box);
 
     // Adicionar a luz ao cenário
     light((lights) => {
@@ -253,14 +223,9 @@ const basics = async () => {
         scene.add(plane);
     });
 
-    addSphere((sphere) => {
-        scene.add(sphere);
-        sphere.position.set(-5, 3, 0); 
-    });
-
     loadGLTF((model) => {
         scene.add(model);
-        model.position.set(10, -1, 10);
+        model.position.set(10, -3, 10);
     });
 
     // Renderizando a cena somente depois que as texturas estão carregadas
@@ -286,9 +251,9 @@ const basics = async () => {
             // Remover o listener de change para evitar chamadas após troca
             orbitControls.removeEventListener('change', changeListener);
             window.removeEventListener('resize', () => handleResize(renderer, camera, scene));
-            dispose(textures, mergedGeometry, material);
+            dispose();
         }
     };
 };
 
-export { basics };
+export { building };

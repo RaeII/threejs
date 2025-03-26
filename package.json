@@ -13,6 +13,8 @@
   },
   "scripts": {
     "start:01": "cd 01.conceitos && vite",
-    "build:01": "cd 01.conceitos && vite build"
+    "build:01": "cd 01.conceitos && vite build",
+    "start:02": "cd 02.SolaSystem && vite",
+    "build:02": "cd 02.SolaSystem && vite build"
   }
 }

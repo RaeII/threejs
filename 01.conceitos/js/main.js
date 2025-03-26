@@ -1,6 +1,7 @@
 import { basics } from './basics';
 import { cube } from './cube';
 import { sphereRender } from './sphere';
+import { building } from './building';
 
 // Objeto para armazenar instâncias ativas
 let activeInstance = null;
@@ -13,7 +14,8 @@ let activeStopAnimation = null; // Nova variável para a função de parar anima
 const renderers = new Map()
     .set("basics", basics)
     .set("cube", cube)
-    .set("sphere", sphereRender);
+    .set("sphere", sphereRender)
+    .set("building", building);
 
 // Função para limpar a renderização atual
 const clearCurrentRendering = () => {
