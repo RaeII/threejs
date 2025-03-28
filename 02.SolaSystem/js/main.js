@@ -16,8 +16,18 @@ import uranusRingTexture from '../assets/img/uranus ring.png';
 import neptuneTexture from '../assets/img/neptune.jpg';
 import plutoTexture from '../assets/img/pluto.jpg';
 
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('webgl') });
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Sombras mais suaves
+
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const orbitControls = new OrbitControls(camera, renderer.domElement);
+const scene = new THREE.Scene();
+
 // Referências aos objetos para manipulá-los posteriormente
-const sceneObjects = {
+let sceneObjects = {
     planet: null,
     sun: null
 };
@@ -63,81 +73,61 @@ const handleResize = (renderer, camera, scene) => {
     }
 };
 
-const planet = (callback) => {
+const planet = (radius, texture, ringTexture) => {
 
     const textureLoader = new THREE.TextureLoader();
 
-    const planet = new THREE.SphereGeometry(3.2,30,30);
-    const planetMaterial = new THREE.MeshStandardMaterial({
-        map: textureLoader.load(mercuryTexture)
+    const planet = new THREE.SphereGeometry(radius,30,30);
+    const planetMaterial = new THREE.MeshPhysicalMaterial({
+        map: textureLoader.load(texture)
     });
 
     const planetMesh = new THREE.Mesh(planet, planetMaterial);
 
-    // Lançar sombra
-    planetMesh.castShadow = true;
+    if (ringTexture) {
+        const ring = new THREE.RingGeometry(10, 20, 32);
+        const ringMaterial = new THREE.MeshBasicMaterial({
+            map: textureLoader.load(ringTexture),
+            side: THREE.DoubleSide
+        });
+        let ringMesh = new THREE.Mesh(ring, ringMaterial);
+        
+        return {planetMesh, ringMesh};
+    }
 
-    sceneObjects.planet = planetMesh
-
-    return planetMesh;
+    return {planetMesh}
+    
 };
 
-const sun = (callback) => {
+const sun = () => {
 
     const textureLoader = new THREE.TextureLoader();
 
     const sun = new THREE.SphereGeometry(16,30,30);
-    const sunMaterial = new THREE.MeshStandardMaterial({
+    const sunMaterial = new THREE.MeshBasicMaterial({
         map: textureLoader.load(sunTexture)
     });
 
     const sunMesh = new THREE.Mesh(sun, sunMaterial);
+    
+    sceneObjects.sun = sunMesh
 
-    // Lançar sombra
-    sunMesh.castShadow = true;
+    scene.add(sunMesh);
+}; 
 
-    const planetRender = planet()
-    sunMesh.add(planetRender)
-    planetRender.position.x = 28
-   
-    callback(sunMesh);
-};
+const light = () => {
+    
+    const pointLight = new THREE.PointLight(0xFFFFFF, 2, 300, 0);
 
-const light = (callback) => {
-    const hemisphereLight = new THREE.PointLight('rgb(255, 255, 255)', 100, 100,);
-    hemisphereLight.position.set(3, 5, 2);
-    hemisphereLight.castShadow = true;
-
-    const ambientLight = new THREE.AmbientLight('rgb(255, 255, 255)', 1.2);
-
-    const directionalLight = new THREE.DirectionalLight('rgb(255, 255, 255)', 2);
-    directionalLight.position.set(100, 50, 50);
-    directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.set(1024, 1024);
-    directionalLight.shadow.radius = 20;
-    directionalLight.shadow.camera.bottom = -10;
-    directionalLight.shadow.camera.top = 50;
-    directionalLight.shadow.camera.left = -10;
-    directionalLight.shadow.camera.right = 10;
- 
-    const directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight);
-
-    const dLightHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
-
-    callback([directionalLight, directionalLightHelper,ambientLight, dLightHelper]);
+    scene.add(pointLight);
+    
 };
 
 const solarSystem = async () => {
 
-    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('webgl') });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Sombras mais suaves
-
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const orbitControls = new OrbitControls(camera, renderer.domElement);
-    const scene = new THREE.Scene();
+    //POSIÇÃO DA CAMERA
+    camera.position.set(-90, 140, 140);
+    orbitControls.update();
 
     /* const skyTexture = new THREE.TextureLoader().load(sky);
     scene.background = skyTexture; */
@@ -151,33 +141,37 @@ const solarSystem = async () => {
         renderer.render(scene, camera); // Renderizar após carregar o céu
     });
 
-    const axesHelper = new THREE.AxesHelper(5);
-    scene.add(axesHelper);
-
-    //POSIÇÃO DA CAMERA
-    camera.position.set(0, 10, 50);
-    orbitControls.update();
-
+    // ADICIONAR SOL
+    sun();
 
     // Adicionar a luz ao cenário
-    light((lights) => {
-        lights.forEach(light => {
-            scene.add(light);
-        });
-        renderer.render(scene, camera); // Renderizar após adicionar luzes
-    });
+    light()
 
-    sun((sun) => {
-        scene.add(sun);
-        sun.position.set(-5, 3, 0); 
-        sceneObjects.sun = sun; // Guardar referência
-    });
+    const mercury = planet(3.2, mercuryTexture)
+    const mercuryObj = new THREE.Object3D();
+    mercuryObj.add(mercury.planetMesh)
+    scene.add(mercuryObj)
+    mercury.planetMesh.position.x = 28
 
+    const saturn = planet(10, saturnTexture, saturnRingTexture)
+    const saturnObj = new THREE.Object3D();
+    scene.add(saturnObj)
+    saturnObj.add(saturn.planetMesh)
+    saturnObj.add(saturn.ringMesh)
+ 
+    saturn.planetMesh.position.x = 138
+    saturn.ringMesh.position.x = 138
+    saturn.ringMesh.rotation.x = -0.5 * Math.PI
     function animate() {
     
-        renderer.render(scene, camera);
         sceneObjects.sun.rotateY(0.004)
-        sceneObjects.planet.rotateY(0.004)
+        mercury.planetMesh.rotateY(0.004)
+        mercuryObj.rotateY(0.005)   
+
+        saturn.planetMesh.rotateY(0.004)
+        saturnObj.rotateY(0.009)   
+
+        renderer.render(scene, camera);
     }
 
     // Renderizar a cena inicialmente
@@ -196,8 +190,6 @@ const solarSystem = async () => {
     
     // Adicionar manipulador de redimensionamento
     window.addEventListener('resize', resizeHandler);
-
-    sceneObjects = null
 
 };
 
