@@ -1,6 +1,7 @@
 import * as THREE from 'three';
-import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+
 import sky from '../assets/img/NightSkyHDRI008_4K-TONEMAPPED.jpg';
 import starsTexture from '../assets/img/stars.jpg';
 import sunTexture from '../assets/img/sun.jpg';
@@ -73,29 +74,44 @@ const handleResize = (renderer, camera, scene) => {
     }
 };
 
-const planet = (radius, texture, ringTexture) => {
+const planet = (radius, texture, position,ring) => {
 
     const textureLoader = new THREE.TextureLoader();
 
-    const planet = new THREE.SphereGeometry(radius,30,30);
-    const planetMaterial = new THREE.MeshPhysicalMaterial({
+    const geo = new THREE.SphereGeometry(radius,30,30);
+    const mat = new THREE.MeshPhysicalMaterial({
         map: textureLoader.load(texture)
     });
 
-    const planetMesh = new THREE.Mesh(planet, planetMaterial);
+    const mesh = new THREE.Mesh(geo, mat);
 
-    if (ringTexture) {
-        const ring = new THREE.RingGeometry(10, 20, 32);
+    mesh.position.x = position
+
+    const obj = new THREE.Object3D();
+    obj.add(mesh)
+    scene.add(obj)
+
+
+    if (ring) {
+
+        const ringGeo = new THREE.RingGeometry(
+            ring.innerRadius, 
+            ring.outerRadius, 
+            32
+        );
+
         const ringMaterial = new THREE.MeshBasicMaterial({
-            map: textureLoader.load(ringTexture),
+            map: textureLoader.load(ring.texture),
             side: THREE.DoubleSide
         });
-        let ringMesh = new THREE.Mesh(ring, ringMaterial);
-        
-        return {planetMesh, ringMesh};
+
+        let ringMesh = new THREE.Mesh(ringGeo, ringMaterial);
+        ringMesh.rotation.x = -0.5 * Math.PI
+        ringMesh.position.x = position
+        obj.add(ringMesh)
     }
 
-    return {planetMesh}
+    return {obj, mesh}
     
 };
 
@@ -109,10 +125,10 @@ const sun = () => {
     });
 
     const sunMesh = new THREE.Mesh(sun, sunMaterial);
-    
-    sceneObjects.sun = sunMesh
 
     scene.add(sunMesh);
+
+    return sunMesh
 }; 
 
 const light = () => {
@@ -121,6 +137,41 @@ const light = () => {
 
     scene.add(pointLight);
     
+};
+
+const loadGLTF = () => {
+
+    const glb = new URL("../assets/glb/nave_ronin.glb", import.meta.url).href;
+
+    const loader = new GLTFLoader();
+    loader.load(glb, (gltf) => {
+        const model = gltf.scene;
+        // Ajustar a escala do modelo (valores menores diminuem, maiores aumentam)
+        model.scale.set(10,10,10);
+        
+        // Aplicar propriedades de sombra a todos os objetos filhos do modelo
+        model.traverse(function(node) {
+            if (node.isMesh) {
+                node.castShadow = true;
+                node.receiveShadow = true;
+                
+                // Se o objeto tiver materiais, ajustá-los para renderizar sombras corretamente
+                if (node.material) {
+                    if (Array.isArray(node.material)) {
+                        node.material.forEach(material => {
+                            material.shadowSide = THREE.FrontSide;
+                        });
+                    } else {
+                        node.material.shadowSide = THREE.FrontSide;
+                    }
+                }
+            }
+        });
+        
+        scene.add(model);
+        model.position.set(10, 0, 170);
+    });
+
 };
 
 const solarSystem = async () => {
@@ -142,37 +193,63 @@ const solarSystem = async () => {
     });
 
     // ADICIONAR SOL
-    sun();
+    const sunMesh = sun();
 
     // Adicionar a luz ao cenário
     light()
 
-    const mercury = planet(3.2, mercuryTexture)
-    const mercuryObj = new THREE.Object3D();
-    mercuryObj.add(mercury.planetMesh)
-    scene.add(mercuryObj)
-    mercury.planetMesh.position.x = 28
+    // ADICIONAR
+    loadGLTF()
 
-    const saturn = planet(10, saturnTexture, saturnRingTexture)
-    const saturnObj = new THREE.Object3D();
-    scene.add(saturnObj)
-    saturnObj.add(saturn.planetMesh)
-    saturnObj.add(saturn.ringMesh)
- 
-    saturn.planetMesh.position.x = 138
-    saturn.ringMesh.position.x = 138
-    saturn.ringMesh.rotation.x = -0.5 * Math.PI
+    const mercury = planet(3.2, mercuryTexture, 28);
+    const venus = planet(5.8, venusTexture, 44);
+    const earth = planet(6, earthTexture, 62);
+    const mars = planet(4, marsTexture, 78);
+    const jupiter = planet(12, jupiterTexture, 100);
+    const saturn = planet(10, saturnTexture, 138, {
+        innerRadius: 10,
+        outerRadius: 20,
+        texture: saturnRingTexture
+    });
+    const uranus = planet(7, uranusTexture, 176, {
+        innerRadius: 7,
+        outerRadius: 12,
+        texture: uranusRingTexture
+    });
+    const neptune = planet(7, neptuneTexture, 200);
+    const pluto = planet(2.8, plutoTexture, 216);
+
+    
     function animate() {
     
-        sceneObjects.sun.rotateY(0.004)
-        mercury.planetMesh.rotateY(0.004)
-        mercuryObj.rotateY(0.005)   
+        //Self-rotation
+        sunMesh.rotateY(0.004);
 
-        saturn.planetMesh.rotateY(0.004)
-        saturnObj.rotateY(0.009)   
+        mercury.mesh.rotateY(0.004);
+        venus.mesh.rotateY(0.002);
+        earth.mesh.rotateY(0.02);
+        mars.mesh.rotateY(0.018);
+        jupiter.mesh.rotateY(0.04);
+        saturn.mesh.rotateY(0.038);
+        uranus.mesh.rotateY(0.03);
+        neptune.mesh.rotateY(0.032);
+        pluto.mesh.rotateY(0.008);
+
+        //Around-sun-rotation
+        mercury.obj.rotateY(0.04);
+        venus.obj.rotateY(0.015);
+        earth.obj.rotateY(0.01);
+        mars.obj.rotateY(0.008);
+        jupiter.obj.rotateY(0.002);
+        saturn.obj.rotateY(0.0009);
+        uranus.obj.rotateY(0.0004);
+        neptune.obj.rotateY(0.0001);
+        pluto.obj.rotateY(0.00007);
 
         renderer.render(scene, camera);
     }
+
+
 
     // Renderizar a cena inicialmente
     renderer.setAnimationLoop(animate);
