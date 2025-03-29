@@ -15,6 +15,8 @@
     "start:01": "cd 01.conceitos && vite",
     "build:01": "cd 01.conceitos && vite build",
     "start:02": "cd 02.SolaSystem && vite",
-    "build:02": "cd 02.SolaSystem && vite build"
+    "build:02": "cd 02.SolaSystem && vite build",
+    "start:03": "cd 03.GLSL&Shaders && vite",
+    "build:03": "cd 03.GLSL&Shaders && vite build"
   }
 }
