@@ -36,10 +36,28 @@ const light = () => {
     
 };
 
-const solarSystem = async () => {
+const main = async () => {
+
+    /**
+     * @param width — Width along the X axis. Expects a Float. Default 1
+     * @param height — Height along the Y axis. Expects a Float. Default 1
+     * @param widthSegments — Number of segmented faces along the width of the sides. Expects a Integer. Default 1
+     * @param heightSegments — Number of segmented faces along the height of the sides. Expects a Integer. Default 1
+     */
+
+    const geometry = new THREE.PlaneGeometry(10, 10,30,30);
+    const material = new THREE.ShaderMaterial({
+        vertexShader: document.getElementById('vertexShader').textContent,
+        fragmentShader: document.getElementById('fragmentShader').textContent,
+        wireframe: true
+    });
+
+    const mesh = new THREE.Mesh(geometry, material);
+
+    scene.add(mesh);
 
     //POSIÇÃO DA CAMERA
-    camera.position.set(-90, 140, 140);
+    camera.position.set(0, 0, 20);
     orbitControls.update();
 
     // Adicionar a luz ao cenário
@@ -68,4 +86,4 @@ const solarSystem = async () => {
 
 };
 
-solarSystem();
+main();
