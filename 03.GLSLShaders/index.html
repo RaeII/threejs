@@ -11,23 +11,42 @@
     <canvas id="webgl"></canvas>
 
     <script id="vertexShader" type="x-vertex">
-
+        uniform vec2 uMouse;
+        uniform float uTime;
+        
+        varying float vDistancia;
+        
         void main() {
-           gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0);
+            vec4 modelPosition = modelMatrix * vec4(position, 1.0);
+            vec4 viewPosition = viewMatrix * modelPosition;
+            vec4 projectedPosition = projectionMatrix * viewPosition;
+            
+            // Calcular distância entre o mouse e o vértice
+            vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+            float distancia = distance(worldPosition.xy, uMouse);
+            
+            vDistancia = distancia;
+            
+            gl_Position = projectedPosition;
         }
-
     </script>
 
     <script id="fragmentShader" type="x-fragment">
-
-        void main() {
-            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-        }
+        uniform vec3 uCorBase;
+        uniform vec3 uCorHover;
+        uniform float uRaio;
         
+        varying float vDistancia;
+        
+        void main() {
+            // Determinar a cor baseada na distância
+            float forca = smoothstep(uRaio, 0.0, vDistancia);
+            vec3 corFinal = mix(uCorBase, uCorHover, forca);
+            
+            gl_FragColor = vec4(corFinal, 1.0);
+        }
     </script>
     
-    
-
     <script type="module" src="./js/main.js"></script>
 </body>
 </html>

@@ -1,13 +1,13 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
+
 const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('webgl') });
 renderer.setSize(window.innerWidth, window.innerHeight);
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const orbitControls = new OrbitControls(camera, renderer.domElement);
 const scene = new THREE.Scene();
-
 
 // Função para redimensionar a cena
 const handleResize = (renderer, camera, scene) => {
@@ -29,61 +29,83 @@ const handleResize = (renderer, camera, scene) => {
 };
 
 const light = () => {
-    
     const pointLight = new THREE.PointLight(0xFFFFFF, 2, 300, 0);
-
     scene.add(pointLight);
-    
 };
 
-const main = async () => {
+const geometry = new THREE.PlaneGeometry(10, 10, 30, 30);
 
-    /**
-     * @param width — Width along the X axis. Expects a Float. Default 1
-     * @param height — Height along the Y axis. Expects a Float. Default 1
-     * @param widthSegments — Number of segmented faces along the width of the sides. Expects a Integer. Default 1
-     * @param heightSegments — Number of segmented faces along the height of the sides. Expects a Integer. Default 1
-     */
+// Variáveis para rastreamento do mouse
+const mouse = new THREE.Vector2(0, 0);
+let raycaster = new THREE.Raycaster();
 
-    const geometry = new THREE.PlaneGeometry(10, 10,30,30);
-    const material = new THREE.ShaderMaterial({
-        vertexShader: document.getElementById('vertexShader').textContent,
-        fragmentShader: document.getElementById('fragmentShader').textContent,
-        wireframe: true
-    });
+// Tratamento do movimento do mouse
+window.addEventListener('mousemove', (event) => {
+    // Convertendo coordenadas do mouse para coordenadas normalizadas (-1 a 1)
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+});
 
-    const mesh = new THREE.Mesh(geometry, material);
-
-    scene.add(mesh);
-
-    //POSIÇÃO DA CAMERA
-    camera.position.set(0, 0, 20);
-    orbitControls.update();
-
-    // Adicionar a luz ao cenário
-    light()
-    
-    function animate() {    
-        renderer.render(scene, camera);
+// Cores para o efeito de hover
+const corBase = new THREE.Color(0x005588);
+const corHover = new THREE.Color(0xff0066);
+ 
+const material = new THREE.ShaderMaterial({
+    vertexShader: document.getElementById('vertexShader').textContent,
+    fragmentShader: document.getElementById('fragmentShader').textContent,
+    wireframe: true,
+    uniforms: {
+        uMouse: { value: new THREE.Vector2(0, 0) },
+        uTime: { value: 0 },
+        uCorBase: { value: corBase },
+        uCorHover: { value: corHover },
+        uRaio: { value: 0.5 }
     }
+});
 
-    // Renderizar a cena inicialmente
-    renderer.setAnimationLoop(animate);
+const mesh = new THREE.Mesh(geometry, material);
+scene.add(mesh);
 
-    // Função para atualizar a cena quando necessário
-    const updateScene = () => {
-        renderer.render(scene, camera);
-    };
-    
-    // Configurar os controles para atualizar a cena quando alterados
-    orbitControls.addEventListener('change', updateScene);
-    
-    // Criar uma função de referência para o redimensionamento
-    const resizeHandler = () => handleResize(renderer, camera, scene);
-    
-    // Adicionar manipulador de redimensionamento
-    window.addEventListener('resize', resizeHandler);
+//POSIÇÃO DA CAMERA
+camera.position.set(0, 0, 20);
+orbitControls.update();
+// Adicionar a luz ao cenário
+light()
 
+const clock = new THREE.Clock();
+
+function animate() {
+    const elapsedTime = clock.getElapsedTime();
+    
+    // Atualizar o tempo no shader
+    material.uniforms.uTime.value = elapsedTime;
+    
+    // Converter coordenadas do mouse normalizadas para coordenadas do mundo
+    raycaster.setFromCamera(mouse, camera);
+    
+    const intersects = raycaster.intersectObjects([mesh]);
+    if (intersects.length > 0) {
+        const intersectionPoint = intersects[0].point;
+        material.uniforms.uMouse.value.x = intersectionPoint.x;
+        material.uniforms.uMouse.value.y = intersectionPoint.y;
+    }
+    
+    renderer.render(scene, camera);
+}
+
+// Renderizar a cena inicialmente
+renderer.setAnimationLoop(animate);
+// Função para atualizar a cena quando necessário
+const updateScene = () => {
+    renderer.render(scene, camera);
 };
 
-main();
+// Configurar os controles para atualizar a cena quando alterados
+orbitControls.addEventListener('change', updateScene);
+
+// Criar uma função de referência para o redimensionamento
+const resizeHandler = () => handleResize(renderer, camera, scene);
+
+// Adicionar manipulador de redimensionamento
+window.addEventListener('resize', resizeHandler);
+
